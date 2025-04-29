@@ -1,10 +1,12 @@
-import audioScripts from './text-to-voice.js';
+import createIndivFiles from './text-to-voice.js';
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-let {hA, hB} = audioScripts;
+let topic = "AI";
+//let {hostA, hostB} = audioScripts;
+const {hostA, hostB} = await createIndivFiles(topic);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,9 +14,10 @@ const inputDir = path.join(__dirname, '..', 'indiv-audio-files');
 const outputDir = path.join(__dirname, '..', 'podcasts'); 
 fs.mkdirSync(outputDir, {recursive: true});
 const outputFile = path.join(outputDir, 'merged.mp3');
+const tempDir = path.join(outputDir, 'temp');
 
 let audioFiles =[];
-for(let i=0, j=0; i<hA.length, j<hB.length; i++, j++){
+for(let i=0, j=0; i<hostA.length && j<hostB.length; i++, j++){
   audioFiles.push(`hostA-${i}.mp3`);
   audioFiles.push(`hostB-${j}.mp3`);
 }
@@ -40,4 +43,4 @@ ffmpegCommand
     .on('error', (err)=>{
         console.log("Error merging the audio files: ", err);
     })
-    .mergeToFile(outputFile, 'output/temp');
+    .mergeToFile(outputFile, tempDir);

@@ -4,7 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-//import {hostA, hostB} from './script-formatting.js';
+// import script from './script-gen.js';
+import scriptGen from './script-gen.js';
 
 dotenv.config();
 
@@ -54,19 +55,30 @@ const speak = async (text, model, filename) => {
 
 //speak(text, model, filename);
 
-let hA = ["This is the first line of host A's script.", "This is the second line of host A's script."];
-let hB = ["This is the first line of host B's script.", "This is the second line of host B's script."];
+async function createIndivFiles(topic = "AI"){
+  try{
+    console.log("Generating script...");
+    const {hostA, hostB} = await scriptGen(topic);
+    console.log("Script generated successfully!");
 
-for(let i =0, j=0; i<hA.length, j<hB.length; i++, j++){
-  let filename = `hostA-${i}.mp3`;
-  let model = "aura-2-apollo-en";
-  let text = hA[i]; 
-  await speak(text, model, filename);
-  
-  filename = `hostB-${j}.mp3`;
-  model = "aura-asteria-en";
-  text = hB[j]; 
-  await speak(text, model, filename);
+    console.log("\nGenerating audio files...");
+    for (let i = 0; i < hostA.length && i < hostB.length; i++) {
+      await speak(hostA[i], "aura-2-apollo-en", `hostA-${i}.mp3`);
+      await speak(hostB[i], "aura-asteria-en", `hostB-${i}.mp3`);
+    }
+    
+    console.log("\nAll audio files generated!");
+
+    return {hostA, hostB};
+  }
+  catch(error){
+    console.error("Error creating individual files:", error);
+    throw error;
+  }
 }
 
-export default {hA, hB};
+
+
+//let hostA = ["This is the first line of host A's script.", "This is the second line of host A's script."];
+//let hostB = ["This is the first line of host B's script.", "This is the second line of host B's script."];
+export default createIndivFiles; 
