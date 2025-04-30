@@ -1,12 +1,18 @@
 import './output.css'; 
 import Home from './pages/home.js';
+import History from './pages/history.js';
+import Navbar from './components/navbar.js';
+import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 
 function App() {
   return (
-    <div>
-      <h1 className="text-blue-700 text-5xl">Ai Podcast</h1>
-      <Home />
-    </div>
+    <Router>
+      <Navbar/>
+      <Routes>
+        <Route path="/" element={<Home/>}/>
+        <Route path="/history" element={<History/>}/>
+      </Routes>
+    </Router>
   );
 }
 
