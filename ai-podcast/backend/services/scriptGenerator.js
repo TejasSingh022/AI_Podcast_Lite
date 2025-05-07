@@ -10,12 +10,12 @@ async function scriptGen(topic) {
 
     FORMAT:
     - Include a brief intro where hosts introduce themselves and the topic
-    - Host A should be male and host B should be female
+    - Host A and Host B should have gender neutral names
     - Structure a conversation with speaker labels
     - Aim for approximately 300 words (roughly 2 minutes when spoken)
     - Include a brief conclusion or sign-off
-    - No sound effects, music effects, fade effects or production notes needed
-    - No symbols or emojis need to be included 
+    - There must be no sound effects, music effects, fade effects or production notes needed
+    - There must be no symbols or emojis need to be included 
 
     Make the conversation informative yet conversational, with each host contributing unique perspectives and insights on the topic.`;
 

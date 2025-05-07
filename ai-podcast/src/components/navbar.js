@@ -13,7 +13,7 @@ const Navbar =()=>{
             </div>
             <div className='flex gap-40 mr-10'>
                 <Link to="/" className={isActive('/')}>Home</Link>
-                <Link to="/history" className={isActive('history')}>History</Link>
+                
             </div>
         </nav>
     )

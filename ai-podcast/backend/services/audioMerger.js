@@ -1,4 +1,4 @@
-import createIndivFiles from './text-to-voice.js';
+import createIndivFiles from './audioGenerator.js';
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import path from 'path';
@@ -47,4 +47,4 @@ const mergeAudio= async (topic)=>{
         .mergeToFile(outputFile, tempDir);
 }
 
-mergeAudio("AI");
+mergeAudio("Cricket");
