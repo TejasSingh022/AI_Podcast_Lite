@@ -1,60 +1,63 @@
 import { GoogleGenAI } from "@google/genai";
-import dotenv from "dotenv";
-dotenv.config();
+import config from "../config.js";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-//let topic = "AI"; //User input
 
 async function scriptGen(topic) {
-    let prompt = `Generate a 2-minute podcast conversation script between two hosts (Host A and Host B) discussing the topic: ${topic}. 
+    let scriptGenPrompt = `Generate a 1-minute podcast conversation script between two hosts (Host A and Host B) discussing the topic: ${topic}. 
 
     FORMAT:
     - Include a brief intro where hosts introduce themselves and the topic
     - Host A and Host B should have gender neutral names
     - Structure a conversation with speaker labels
-    - Aim for approximately 300 words (roughly 2 minutes when spoken)
+    - Aim for approximately 150 words (roughly 1 minute when spoken)
     - Include a brief conclusion or sign-off
     - There must be no sound effects, music effects, fade effects or production notes needed
-    - There must be no symbols or emojis need to be included 
+    - There must be no symbols or emojis included in the script 
 
     Make the conversation informative yet conversational, with each host contributing unique perspectives and insights on the topic.`;
 
-    const response = await ai.models.generateContent({
-        // model: "gemini-2.0-flash",
-        // contents: prompt,
-        model: "gemini-1.5-flash", 
-        contents: prompt,
-        generationConfig: {
-            temperature: 0.7,       
-            maxOutputTokens: 800,   
-            topK: 40,
-            topP: 0.95,
-            stopSequences: ["Host C:"]
+    let titleGenPrompt = `Generate a short, descriptive title for the given podcast script. Return only the title in PascalCase, using lowercase alphabets only. No spaces, newlines, hyphens, numbers, or special characters: ${scriptGenPrompt}`;
+
+    try{
+        console.log("Generating script...");
+
+        const response = await ai.models.generateContent({
+            // model: "gemini-2.0-flash",
+            model: "gemini-1.5-flash", 
+            contents: scriptGenPrompt,
+            generationConfig: {
+                temperature: 0.7,       
+                maxOutputTokens: 800,   
+                topK: 40,
+                topP: 0.95,
+                stopSequences: ["Host C:"]
+            }
+        });
+
+        const title = await ai.models.generateContent({
+            // model: "gemini-2.0-flash",
+            model: "gemini-1.5-flash", 
+            contents: titleGenPrompt,
+            generationConfig: {
+                temperature: 0.7,       
+                maxOutputTokens: 800,   
+                topK: 40,
+                topP: 0.95,
+                stopSequences: ["Host C:"]
+            }
+        });
+      
+        console.log("Script generated successfully!");
+        if(title.toString().endsWith("\n")){
+            title = title.toString().slice(0,-2);
         }
-    });
-  
-    let script = response.text;
-    console.log(script);
-    script = script.split("\n");
-    //console.log(script[0]);
 
-    let hostA = [];
-    let hostB = [];
-
-    script.forEach((item)=>{
-        if(item.includes("Host A:")){
-            hostA.push(item.replace("Host A:", "").trim());
-        }else if(item.includes("Host B:")){
-            hostB.push(item.replace("Host B:", "").trim());
-        }
-    })
-
-    console.log(hostA);
-    console.log(hostB);
-
-    return {
-        hostA, hostB
-    };
+        return {script: response.text, title: title.text};
+    }catch(err){
+        console.log(err);
+    }
+    
 }
 
 export default scriptGen;
