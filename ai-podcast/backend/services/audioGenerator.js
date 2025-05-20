@@ -1,39 +1,39 @@
-import { createClient } from '@deepgram/sdk';
+import { createClient } from "@deepgram/sdk";
 import { ElevenLabsClient } from "elevenlabs";
-import { pipeline } from 'stream/promises';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { pipeline } from "stream/promises";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import APIs from "../config.js";
 
 // Deepgram API
-const deepgramAudio=async(text, model)=>{
-  try{
-    const deepgram = createClient(process.env.DEEPGRAM_API_KEY);
-    const response = await deepgram.speak.request({text},{model:model});
+const deepgramAudio = async (text, model) => {
+  try {
+    const deepgram = createClient(APIs.DEEPGRAM_API_KEY);
+    const response = await deepgram.speak.request({ text }, { model: model });
     return response;
-  }
-  catch(error){
+  } catch (error) {
     console.error("Error generating audio from deepgram:", error);
   }
-}
+};
 
 // ElevenLabs API
-const elevenlabsAudio=async(text, model)=>{
-  try{
-    const client = new ElevenLabsClient({apiKey: process.env.ELEVENLABS_API_KEY});
-    const audio = await client.textToSpeech.convert(
-      model, 
-      {
-        text: text,
-        model_id: "eleven_flash_v2_5",
-        output_format: "mp3_44100_128",
+const elevenlabsAudio = async (text, model) => {
+  try {
+    const client = new ElevenLabsClient({
+      apiKey: APIs.ELEVENLABS_API_KEY,
+    });
+    const audio = await client.textToSpeech.convert(model, {
+      text: text,
+      model_id: "eleven_flash_v2_5",
+      output_format: "mp3_44100_128",
     });
     //await play(audio);
     return audio;
-  }catch(err){
+  } catch (err) {
     console.error("Error generating audio from elevenlabs:", err);
   }
-}
+};
 
 // Helper function to convert readable stream to buffer for ElevenLabs API
 async function readableStreamToBuffer(readableStream) {
@@ -51,11 +51,11 @@ async function readableStreamToBuffer(readableStream) {
 const makeAudioFiles = async (text, model, filename, provider) => {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-  const outputDir = path.join(__dirname, '..', 'temp');
-  fs.mkdirSync(outputDir, {recursive: true});
+  const outputDir = path.join(__dirname, "..", "temp");
+  fs.mkdirSync(outputDir, { recursive: true });
   const outputFile = path.join(outputDir, filename);
 
-  if(provider === "deepgram"){
+  if (provider === "deepgram") {
     const response = await deepgramAudio(text, model);
     const stream = await response.getStream();
 
@@ -65,22 +65,22 @@ const makeAudioFiles = async (text, model, filename, provider) => {
         await pipeline(stream, file);
         console.log(`Audio file written to ${outputFile} using deepgram`);
       } catch (err) {
-        console.error('Error writing audio to file:', err);
+        console.error("Error writing audio to file:", err);
       }
     } else {
-      console.error('Error generating audio from deepgram:', stream);
+      console.error("Error generating audio from deepgram:", stream);
     }
-  }
-  else if(provider === "elevenlabs"){
+  } else if (provider === "elevenlabs") {
     const elevenlabsResponse = await elevenlabsAudio(text, model);
     const buffer = await readableStreamToBuffer(elevenlabsResponse);
     fs.writeFileSync(outputFile, buffer);
     console.log(`Audio file written to ${outputFile} using elevenlabs`);
+  } else {
+    console.log(
+      "Invalid provider specified. Please use 'deepgram' or 'elevenlabs'."
+    );
   }
-  else{
-    console.log("Invalid provider specified. Please use 'deepgram' or 'elevenlabs'.");
-  }
-}
+};
 
 // Function to get the provider and model for each host
 async function getProviders(model1, model2) {
@@ -88,8 +88,16 @@ async function getProviders(model1, model2) {
   model2 = model2.toLowerCase();
   let provider1, provider2, modelA, modelB;
 
-  const deepgramModels = [["apollo", "aura-2-apollo-en"], ["asteria", "aura-asteria-en"], ["orpheus", "aura-2-orpheus-en"]];
-  const elevenlabsModels = [["mark", "UgBBYS2sOqTuMpoF3BR0"], ["rachel", "21m00Tcm4TlvDq8ikWAM"], ["cassidy", "56AoDkrOh6qfVPDXZ7Pt"]];
+  const deepgramModels = [
+    ["apollo", "aura-2-apollo-en"],
+    ["asteria", "aura-asteria-en"],
+    ["orpheus", "aura-2-orpheus-en"],
+  ];
+  const elevenlabsModels = [
+    ["mark", "UgBBYS2sOqTuMpoF3BR0"],
+    ["rachel", "21m00Tcm4TlvDq8ikWAM"],
+    ["cassidy", "56AoDkrOh6qfVPDXZ7Pt"],
+  ];
 
   // Check Deepgram models
   deepgramModels.forEach(([name, modelId]) => {
@@ -115,19 +123,24 @@ async function getProviders(model1, model2) {
     }
   });
 
-  return {provider1, provider2, modelA, modelB};
+  return { provider1, provider2, modelA, modelB };
 }
 
 // Makes function call to generate individual audio files
-async function createIndivFiles(hostA, hostB, model1, model2){
-  try{
-    const {provider1, provider2, modelA, modelB} = await getProviders(model1, model2);
+async function createIndivFiles(hostA, hostB, model1, model2) {
+  try {
+    const { provider1, provider2, modelA, modelB } = await getProviders(
+      model1,
+      model2
+    );
     console.log("provider1: ", provider1);
     console.log("provider2: ", provider2);
     console.log("modelA: ", modelA);
     console.log("modelB: ", modelB);
+    console.log("hostA: ", hostA);
+    console.log("hostB: ", hostB);
 
-    if(!provider1 || !provider2){
+    if (!provider1 || !provider2) {
       throw new Error("Invalid model provided");
     }
 
@@ -136,12 +149,11 @@ async function createIndivFiles(hostA, hostB, model1, model2){
       await makeAudioFiles(hostA[i], modelA, `hostA-${i}.mp3`, provider1);
       await makeAudioFiles(hostB[i], modelB, `hostB-${i}.mp3`, provider2);
     }
-    
+
     console.log("\nAll audio files generated!");
-  }
-  catch(error){
+  } catch (error) {
     console.error("Error creating individual files:", error);
   }
 }
 
-export default createIndivFiles; 
+export default createIndivFiles;
